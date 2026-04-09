@@ -42,7 +42,6 @@ TAB_ENDPOINTS = [
     "/api/pricing",
     "/api/work-orders",
     "/api/correlation",
-    "/api/aggregation",
     "/api/telemetry",
     "/api/audit",
     "/api/auth/users",
