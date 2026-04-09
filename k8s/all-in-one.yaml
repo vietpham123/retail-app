@@ -776,8 +776,8 @@ spec:
                   name: app-secrets
                   key: DB_PASSWORD
           resources:
-            requests: { memory: "128Mi", cpu: "100m" }
-            limits: { memory: "256Mi", cpu: "300m" }
+            requests: { memory: "256Mi", cpu: "100m" }
+            limits: { memory: "512Mi", cpu: "300m" }
 
 # ============================================================
 # api-gateway (Node.js - port 3000)

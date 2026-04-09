@@ -111,7 +111,7 @@ spec:
     spec:
       containers:
         - name: kafka
-          image: bitnami/kafka:3.7
+          image: vietregistry.azurecr.io/kafka:latest
           ports:
             - containerPort: 9092
           env:
@@ -178,7 +178,7 @@ spec:
             - name: RABBITMQ_DEFAULT_USER
               value: "guest"
             - name: RABBITMQ_DEFAULT_PASS
-              value: "<RABBITMQ_PASSWORD>"
+              value: "guest"
           resources:
             requests:
               memory: "128Mi"
