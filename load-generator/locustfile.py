@@ -2,11 +2,20 @@
 Retail Operations Platform - Locust Load Generator
 ====================================================
 Simulates real user navigation through the retail web UI.
+
+Dynatrace RUM Integration:
+- Real browser User-Agent strings so Dynatrace classifies traffic as real users
+- Referer headers on every request to enable Dynatrace user-action detection
+- Proper Accept/Accept-Language headers matching browser fingerprints
+- HTML page loads that trigger Dynatrace JS agent injection (Set-Cookie: dtCookie)
+- Cookie persistence per session for Dynatrace session correlation
+- Unique X-Session-Id header per session for server-side session grouping
 """
 
 import os
 import random
 import time
+import uuid
 from locust import HttpUser, SequentialTaskSet, task, between
 
 # --- Demo Users (retail store staff + corporate viewers) ---
@@ -44,6 +53,36 @@ SKUS = [f"SKU-GAP-{i:03d}" for i in range(1, 20)] + \
        [f"SKU-ON-{i:03d}" for i in range(1, 20)] + \
        [f"SKU-MAC-{i:03d}" for i in range(1, 20)]
 
+# --- Real browser User-Agent strings for Dynatrace RUM detection ---
+BROWSER_USER_AGENTS = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:125.0) Gecko/20100101 Firefox/125.0",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36",
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1",
+    "Mozilla/5.0 (iPad; CPU OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/124.0.6367.88 Mobile/15E148 Safari/604.1",
+]
+
+# Simulated client IPs for Dynatrace geo-location
+CLIENT_IPS = [
+    "104.28.45.112",   # San Francisco
+    "72.134.201.88",   # New York
+    "24.101.55.200",   # Chicago
+    "71.178.92.44",    # Los Angeles
+    "98.169.118.33",   # Houston
+    "50.206.71.129",   # Phoenix
+    "75.144.58.201",   # Seattle
+    "64.134.200.15",   # Denver
+    "69.142.88.160",   # Miami
+    "73.162.45.200",   # Boston
+]
+
+APP_BASE_URL = os.getenv("LOCUST_HOST", "http://api-gateway:3000")
+
 
 def think(min_s=1, max_s=5):
     """Simulate user reading/thinking time."""
@@ -55,11 +94,25 @@ class UISession(SequentialTaskSet):
 
     def on_start(self):
         self.username = random.choice(DEMO_USERNAMES)
+        self.session_id = str(uuid.uuid4())
+        self.current_page = "/"
+
+        # Load HTML page — triggers Dynatrace JS agent injection + dtCookie
+        self.client.get("/", headers=self._browser_headers("/"),
+                        name="GET / (main page)")
+        think(0.3, 0.8)
+        self.client.get("/static/js/main.js",
+                        headers=self._browser_headers("/", accept="application/javascript"),
+                        name="GET /static/js/main.js")
+        think(0.5, 1)
+
         # Login
+        self.current_page = "/login"
         resp = self.client.post("/api/auth/login", json={
             "username": self.username,
             "password": DEMO_PASSWORD,
-        }, name="POST /api/auth/login")
+        }, headers=self._browser_headers("/login"),
+           name="POST /api/auth/login")
         if resp.status_code == 200:
             data = resp.json()
             if not data.get("success"):
@@ -68,25 +121,25 @@ class UISession(SequentialTaskSet):
             self.interrupt()
         think(1, 2)
 
-    # Load the main page
-    @task
-    def load_page(self):
-        self.client.get("/", name="GET / (main page)")
-        think(0.5, 1)
-
     # Visit dashboard first (always)
     @task
     def visit_dashboard(self):
-        self.client.get("/api/analytics/dashboard", name="GET /api/analytics/dashboard")
+        self.current_page = "/dashboard"
+        self.client.get("/api/analytics/dashboard",
+                        headers=self._browser_headers("/dashboard"),
+                        name="GET /api/analytics/dashboard")
         think(2, 5)
 
     # Navigate through random selection of tabs
     @task
     def browse_tabs(self):
-        # Pick 5-10 random tabs to visit
         tabs_to_visit = random.sample(TAB_ENDPOINTS[1:], k=random.randint(5, min(10, len(TAB_ENDPOINTS)-1)))
         for endpoint in tabs_to_visit:
-            self.client.get(endpoint, name=f"GET {endpoint}")
+            page = endpoint.replace("/api/", "/")
+            self.current_page = page
+            self.client.get(endpoint,
+                            headers=self._browser_headers(page),
+                            name=f"GET {endpoint}")
             think(self.user.think_min, self.user.think_max)
 
     # Occasionally create data
@@ -99,14 +152,16 @@ class UISession(SequentialTaskSet):
                 "total_amount": round(random.uniform(9.99, 499.99), 2),
                 "items_count": random.randint(1, 12),
                 "sku": random.choice(SKUS),
-            }, name="POST /api/orders")
+            }, headers=self._browser_headers("/orders"),
+               name="POST /api/orders")
             think(1, 3)
 
         if random.random() < 0.2:
             self.client.post("/api/work-orders", json={
                 "assignee": random.choice(DEMO_USERNAMES),
                 "priority": random.choice(["standard", "express", "same_day"]),
-            }, name="POST /api/work-orders")
+            }, headers=self._browser_headers("/work-orders"),
+               name="POST /api/work-orders")
             think(1, 2)
 
         if random.random() < 0.15:
@@ -114,7 +169,8 @@ class UISession(SequentialTaskSet):
                 "sku": random.choice(SKUS),
                 "quantity": random.randint(0, 500),
                 "warehouse": random.choice(["East Distribution Center", "West Distribution Center"]),
-            }, name="POST /api/inventory")
+            }, headers=self._browser_headers("/inventory"),
+               name="POST /api/inventory")
             think(1, 2)
 
         if random.random() < 0.2:
@@ -123,7 +179,8 @@ class UISession(SequentialTaskSet):
                 "team": random.choice(["East Warehouse", "West Warehouse", "Store Fulfillment"]),
                 "priority": random.choice(["standard", "express", "same_day"]),
                 "status": "assigned",
-            }, name="POST /api/dispatch")
+            }, headers=self._browser_headers("/dispatch"),
+               name="POST /api/dispatch")
             think(1, 2)
 
         if random.random() < 0.25:
@@ -133,20 +190,46 @@ class UISession(SequentialTaskSet):
                 "resource_type": random.choice(["order", "inventory", "dispatch", "pricing", "forecast"]),
                 "resource_id": f"RES-{random.randint(10000, 99999)}",
                 "details": f"Action from {random.choice(STORES)}",
-            }, name="POST /api/audit/log")
+            }, headers=self._browser_headers("/audit"),
+               name="POST /api/audit/log")
             think(0.5, 1)
 
     # Return to dashboard
     @task
     def return_dashboard(self):
-        self.client.get("/api/analytics/dashboard", name="GET /api/analytics/dashboard")
+        self.current_page = "/dashboard"
+        self.client.get("/api/analytics/dashboard",
+                        headers=self._browser_headers("/dashboard"),
+                        name="GET /api/analytics/dashboard")
         think(2, 4)
 
     # Logout
     @task
     def logout(self):
+        self.client.post("/api/auth/logout", json={},
+                         headers=self._browser_headers("/logout"),
+                         name="POST /api/auth/logout")
         think(0.5, 1)
-        self.interrupt()  # End session, Locust will restart
+        self.interrupt()
+
+    def _browser_headers(self, page="/", accept="application/json, text/plain, */*"):
+        """Build headers matching a real browser for Dynatrace session detection."""
+        return {
+            "User-Agent": self.user.ua,
+            "Accept": accept,
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Referer": f"{APP_BASE_URL}{self.current_page}",
+            "Origin": APP_BASE_URL,
+            "Connection": "keep-alive",
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-origin",
+            "X-Requested-With": "XMLHttpRequest",
+            "X-Session-Id": self.session_id,
+            "X-Username": self.username,
+            "X-Forwarded-For": self.user.client_ip,
+        }
 
 
 class CasualBrowser(HttpUser):
@@ -157,6 +240,10 @@ class CasualBrowser(HttpUser):
     think_min = 3
     think_max = 8
 
+    def on_start(self):
+        self.ua = random.choice(BROWSER_USER_AGENTS)
+        self.client_ip = random.choice(CLIENT_IPS)
+
 
 class ActiveOperator(HttpUser):
     """Store manager - moderate speed, creates orders and checks inventory."""
@@ -166,6 +253,10 @@ class ActiveOperator(HttpUser):
     think_min = 2
     think_max = 5
 
+    def on_start(self):
+        self.ua = random.choice(BROWSER_USER_AGENTS)
+        self.client_ip = random.choice(CLIENT_IPS)
+
 
 class PowerUser(HttpUser):
     """Store associate / warehouse worker - fast, creates data frequently."""
@@ -174,3 +265,7 @@ class PowerUser(HttpUser):
     wait_time = between(1, 3)
     think_min = 1
     think_max = 3
+
+    def on_start(self):
+        self.ua = random.choice(BROWSER_USER_AGENTS)
+        self.client_ip = random.choice(CLIENT_IPS)
