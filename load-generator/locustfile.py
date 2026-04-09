@@ -104,7 +104,6 @@ class UISession(SequentialTaskSet):
 
         if random.random() < 0.2:
             self.client.post("/api/work-orders", json={
-                "order_id": f"ORD-{random.randint(10000, 99999)}",
                 "assignee": random.choice(DEMO_USERNAMES),
                 "priority": random.choice(["standard", "express", "same_day"]),
             }, name="POST /api/work-orders")
@@ -117,6 +116,25 @@ class UISession(SequentialTaskSet):
                 "warehouse": random.choice(["East Distribution Center", "West Distribution Center"]),
             }, name="POST /api/inventory")
             think(1, 2)
+
+        if random.random() < 0.2:
+            self.client.post("/api/dispatch", json={
+                "assignee": random.choice(DEMO_USERNAMES),
+                "team": random.choice(["East Warehouse", "West Warehouse", "Store Fulfillment"]),
+                "priority": random.choice(["standard", "express", "same_day"]),
+                "status": "assigned",
+            }, name="POST /api/dispatch")
+            think(1, 2)
+
+        if random.random() < 0.25:
+            self.client.post("/api/audit/log", json={
+                "actor": self.username,
+                "action": random.choice(["login", "create_order", "update_inventory", "approve_dispatch", "generate_report", "modify_pricing"]),
+                "resource_type": random.choice(["order", "inventory", "dispatch", "pricing", "forecast"]),
+                "resource_id": f"RES-{random.randint(10000, 99999)}",
+                "details": f"Action from {random.choice(STORES)}",
+            }, name="POST /api/audit/log")
+            think(0.5, 1)
 
     # Return to dashboard
     @task

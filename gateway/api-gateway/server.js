@@ -100,6 +100,62 @@ app.post('/api/simulate/cycle', express.json(), async (req, res) => {
     }
   }
 
+  // --- Generate fulfillment dispatch, work-orders, and audit data ---
+  const stores = ['Gap Flagship', 'Old Navy Mall', "Macy's Downtown"];
+  const teams = ['East Warehouse', 'West Warehouse', 'Store Fulfillment'];
+  const users = ['mgr_gap', 'mgr_oldnavy', 'mgr_macys', 'wh_east_1', 'wh_west_1'];
+  const priorities = ['standard', 'express', 'same_day'];
+  const actions = ['login', 'create_order', 'update_inventory', 'approve_dispatch', 'generate_report', 'modify_pricing'];
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+  const dataEndpoints = [
+    ...Array.from({ length: 5 }, () => ({
+      name: 'dispatch',
+      url: 'http://fulfillment-dispatch-service:8083/api/dispatch',
+      body: {
+        order_id: null,
+        assignee: pick(users),
+        team: pick(teams),
+        priority: pick(priorities),
+        status: 'assigned',
+      },
+    })),
+    ...Array.from({ length: 5 }, () => ({
+      name: 'work-orders',
+      url: 'http://fulfillment-service:8086/api/work-orders',
+      body: {
+        order_id: null,
+        assignee: pick(users),
+        priority: pick(priorities),
+      },
+    })),
+    ...Array.from({ length: 5 }, () => ({
+      name: 'audit',
+      url: 'http://audit-service:8085/api/audit/log',
+      body: {
+        actor: pick(users),
+        action: pick(actions),
+        resource_type: pick(['order', 'inventory', 'dispatch', 'pricing', 'forecast']),
+        resource_id: `RES-${Math.floor(Math.random() * 90000) + 10000}`,
+        details: `Simulated action from ${pick(stores)}`,
+      },
+    })),
+  ];
+
+  for (const ep of dataEndpoints) {
+    try {
+      const response = await fetch(ep.url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(ep.body),
+      });
+      results[ep.name] = results[ep.name] || { status: response.status, count: 0 };
+      if (response.status < 300) results[ep.name].count++;
+    } catch (err) {
+      results[ep.name] = { error: err.message };
+    }
+  }
+
   res.json({ simulation: 'complete', results });
 });
 
