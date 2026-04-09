@@ -1,0 +1,333 @@
+# ============================================================
+# INDUSTRY CONFIGURATION — RETAIL
+# ============================================================
+# Retail Operations Platform
+# Example stores: Gap, Old Navy, Macy's
+# ============================================================
+
+industry: retail
+display_name: "Retail Operations Platform"
+
+# --- Domain Entities ----------------------------------------
+entities:
+  - name: order
+    description: "A customer purchase order"
+    table: orders
+    fields:
+      - { name: id, type: uuid, primary: true }
+      - { name: customer_id, type: string }
+      - { name: store, type: string }
+      - { name: status, type: enum, values: [placed, processing, shipped, delivered, returned] }
+      - { name: total_amount, type: float }
+      - { name: items_count, type: integer }
+      - { name: placed_at, type: timestamptz }
+      - { name: delivered_at, type: timestamptz, nullable: true }
+    primary_service: order-service
+    kafka_topic: retail.order
+
+  - name: inventory_reading
+    description: "A stock level reading for a product"
+    table: inventory_readings
+    fields:
+      - { name: id, type: uuid, primary: true }
+      - { name: sku, type: string }
+      - { name: quantity, type: integer }
+      - { name: warehouse, type: string }
+      - { name: recorded_at, type: timestamptz }
+    primary_service: inventory-service
+    kafka_topic: retail.inventory
+
+  - name: store_asset
+    description: "A store fixture, POS terminal, or equipment"
+    table: store_assets
+    fields:
+      - { name: id, type: uuid, primary: true }
+      - { name: name, type: string }
+      - { name: type, type: enum, values: [pos, display, refrigerator, shelf, kiosk] }
+      - { name: store, type: string }
+      - { name: status, type: enum, values: [active, maintenance, decommissioned] }
+    primary_service: store-layout-service
+    kafka_topic: retail.store_asset
+
+  - name: fulfillment_task
+    description: "A pick, pack, or ship task"
+    table: fulfillment_tasks
+    fields:
+      - { name: id, type: uuid, primary: true }
+      - { name: order_id, type: uuid }
+      - { name: assignee, type: string }
+      - { name: priority, type: enum, values: [standard, express, same_day] }
+      - { name: status, type: enum, values: [pending, picking, packing, shipped, completed] }
+      - { name: due_at, type: timestamptz }
+    primary_service: fulfillment-service
+    kafka_topic: retail.fulfillment
+
+  - name: demand_forecast
+    description: "Predicted sales demand for a product"
+    table: demand_forecasts
+    fields:
+      - { name: id, type: uuid, primary: true }
+      - { name: sku, type: string }
+      - { name: predicted_units, type: float }
+      - { name: confidence, type: float }
+      - { name: period_start, type: timestamptz }
+      - { name: period_end, type: timestamptz }
+    primary_service: demand-forecast-service
+    kafka_topic: retail.demand_forecast
+
+# --- Services -----------------------------------------------
+services:
+  order-service:
+    language: node
+    port: 3001
+    description: "Manages customer orders and returns"
+    entities: [order]
+
+  inventory-service:
+    language: node
+    port: 3002
+    description: "Tracks real-time stock levels across warehouses"
+    entities: [inventory_reading]
+
+  pos-telemetry-service:
+    language: dotnet
+    port: 5001
+    description: "Ingests POS terminal and IoT sensor data"
+    entities: [inventory_reading]
+
+  catalog-service:
+    language: java
+    port: 8081
+    description: "Processes product catalog updates"
+    entities: [inventory_reading, order]
+
+  store-layout-service:
+    language: python
+    port: 5002
+    description: "Models store layouts and asset placement"
+    entities: [store_asset]
+
+  sales-analytics-service:
+    language: go
+    port: 8082
+    description: "Real-time sales and conversion metrics"
+    entities: [order, inventory_reading]
+
+  demand-forecast-service:
+    language: ruby
+    port: 4567
+    description: "Predicts product demand by region and season"
+    entities: [demand_forecast]
+
+  fulfillment-dispatch-service:
+    language: kotlin
+    port: 8083
+    description: "Assigns fulfillment tasks to warehouse staff"
+    entities: [fulfillment_task]
+
+  customer-notification-service:
+    language: php
+    port: 8080
+    description: "Sends order status updates to customers"
+    entities: []
+
+  supplier-feed-service:
+    language: elixir
+    port: 4000
+    description: "Integrates supplier inventory and pricing feeds"
+    entities: []
+
+  aggregator-service:
+    language: rust
+    port: 8084
+    description: "Aggregates sales, inventory, and fulfillment data"
+    entities: [order, inventory_reading, demand_forecast]
+
+  auth-service:
+    language: ruby
+    port: 4568
+    description: "User authentication and management"
+    entities: []
+
+  audit-service:
+    language: go
+    port: 8085
+    description: "Audit trail and compliance logging"
+    entities: []
+
+  dynamic-pricing-service:
+    language: python
+    port: 5003
+    description: "Manages promotions and dynamic pricing"
+    entities: []
+
+  fulfillment-service:
+    language: java
+    port: 8086
+    description: "Manages pick/pack/ship fulfillment tasks"
+    entities: [fulfillment_task]
+
+  fraud-detection-service:
+    language: dotnet
+    port: 5004
+    description: "Correlates transactions for fraud detection"
+    entities: [order]
+
+# --- UI Tabs ------------------------------------------------
+ui_tabs:
+  - label: "Dashboard"
+    icon: "dashboard"
+    endpoint: "/api/analytics/dashboard"
+    description: "KPI overview and real-time sales metrics"
+
+  - label: "Orders"
+    icon: "shopping_cart"
+    endpoint: "/api/orders"
+    description: "Customer orders and returns"
+
+  - label: "Inventory"
+    icon: "inventory_2"
+    endpoint: "/api/inventory"
+    description: "Real-time stock levels"
+
+  - label: "Catalog"
+    icon: "category"
+    endpoint: "/api/catalog"
+    description: "Product catalog management"
+
+  - label: "Store Layout"
+    icon: "store"
+    endpoint: "/api/topology"
+    description: "Store layouts and asset placement"
+
+  - label: "Sales Analytics"
+    icon: "analytics"
+    endpoint: "/api/analytics/trends"
+    description: "Sales trends and conversion metrics"
+
+  - label: "Demand Forecast"
+    icon: "trending_up"
+    endpoint: "/api/forecasts"
+    description: "Predicted product demand"
+
+  - label: "Fulfillment"
+    icon: "local_shipping"
+    endpoint: "/api/dispatch"
+    description: "Warehouse fulfillment tasks"
+
+  - label: "Supplier Feeds"
+    icon: "cloud_download"
+    endpoint: "/api/external"
+    description: "Supplier inventory and pricing feeds"
+
+  - label: "Notifications"
+    icon: "notifications"
+    endpoint: "/api/notifications"
+    description: "Customer order notifications"
+
+  - label: "Dynamic Pricing"
+    icon: "sell"
+    endpoint: "/api/pricing"
+    description: "Promotions and dynamic pricing"
+
+  - label: "Tasks"
+    icon: "assignment"
+    endpoint: "/api/work-orders"
+    description: "Pick/pack/ship task management"
+
+  - label: "Fraud Detection"
+    icon: "security"
+    endpoint: "/api/correlation"
+    description: "Transaction fraud analysis"
+
+  - label: "Reports"
+    icon: "bar_chart"
+    endpoint: "/api/aggregation"
+    description: "Aggregated reports and summaries"
+
+  - label: "POS Telemetry"
+    icon: "point_of_sale"
+    endpoint: "/api/telemetry"
+    description: "POS terminal data streams"
+
+  - label: "Audit Log"
+    icon: "history"
+    endpoint: "/api/audit"
+    description: "System audit trail"
+
+  - label: "Users"
+    icon: "people"
+    endpoint: "/api/auth/users"
+    description: "User management"
+
+# --- KPIs ---------------------------------------------------
+kpis:
+  - name: "Orders Today"
+    source: "/api/analytics/dashboard"
+    field: "orders_today"
+    format: "number"
+    color: "#2196f3"
+
+  - name: "Revenue"
+    source: "/api/analytics/dashboard"
+    field: "daily_revenue"
+    format: "currency"
+    color: "#4caf50"
+
+  - name: "Items In Stock"
+    source: "/api/analytics/dashboard"
+    field: "total_in_stock"
+    format: "number"
+    color: "#ff9800"
+
+  - name: "Fulfillment Rate"
+    source: "/api/analytics/dashboard"
+    field: "fulfillment_rate_pct"
+    format: "percent"
+    color: "#9c27b0"
+
+  - name: "Cart Abandonment"
+    source: "/api/analytics/dashboard"
+    field: "abandonment_pct"
+    format: "percent"
+    color: "#f44336"
+
+  - name: "Avg Ship Time"
+    source: "/api/analytics/dashboard"
+    field: "avg_ship_hours"
+    format: "number"
+    color: "#00bcd4"
+
+# --- Roles --------------------------------------------------
+roles:
+  - { name: viewer, description: "View dashboards and reports" }
+  - { name: store_associate, description: "Process orders and inventory" }
+  - { name: warehouse_worker, description: "Fulfill and ship orders" }
+  - { name: store_manager, description: "Full store operations access" }
+  - { name: admin, description: "System administration" }
+
+# --- Regions / Stores ----------------------------------------
+regions:
+  - { id: "gap-flagship", name: "Gap Flagship" }
+  - { id: "old-navy-mall", name: "Old Navy Mall" }
+  - { id: "macys-downtown", name: "Macy's Downtown" }
+  - { id: "warehouse-east", name: "East Distribution Center" }
+  - { id: "warehouse-west", name: "West Distribution Center" }
+
+# --- Demo Users ---------------------------------------------
+demo_users:
+  - { username: "admin_retail", role: "admin" }
+  - { username: "mgr_gap", role: "store_manager" }
+  - { username: "mgr_oldnavy", role: "store_manager" }
+  - { username: "mgr_macys", role: "store_manager" }
+  - { username: "assoc_gap_1", role: "store_associate" }
+  - { username: "assoc_gap_2", role: "store_associate" }
+  - { username: "assoc_oldnavy_1", role: "store_associate" }
+  - { username: "assoc_macys_1", role: "store_associate" }
+  - { username: "wh_east_1", role: "warehouse_worker" }
+  - { username: "wh_east_2", role: "warehouse_worker" }
+  - { username: "wh_west_1", role: "warehouse_worker" }
+  - { username: "viewer_corp_1", role: "viewer" }
+  - { username: "viewer_corp_2", role: "viewer" }
+  - { username: "viewer_corp_3", role: "viewer" }
+  - { username: "viewer_corp_4", role: "viewer" }

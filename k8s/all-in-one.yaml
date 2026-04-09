@@ -1,0 +1,901 @@
+# ============================================================
+# Retail Operations Platform - All-in-One Kubernetes Manifest
+# ============================================================
+# AGENT: After industry customization, replace all generic
+# service names with industry-specific names from industry.yaml
+# ============================================================
+#
+# Infrastructure (TimescaleDB, Redis, Kafka, RabbitMQ) is in
+# infrastructure.yaml — deploy that first.
+# ============================================================
+
+# --- Shared environment ConfigMap ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  DB_HOST: "timescaledb"
+  DB_PORT: "5432"
+  DB_NAME: "appdb"
+  DB_USER: "appuser"
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  KAFKA_BROKER: "kafka:9092"
+  RABBITMQ_HOST: "rabbitmq"
+  RABBITMQ_PORT: "5672"
+  RABBITMQ_USER: "guest"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+type: Opaque
+stringData:
+  DB_PASSWORD: "<DB_PASSWORD>"
+  RABBITMQ_PASSWORD: "<RABBITMQ_PASSWORD>"
+  DEMO_PASSWORD: "<DEMO_PASSWORD>"
+
+# ============================================================
+# order-service (Node.js - port 3001)
+# AGENT: Rename to industry-specific name
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service
+spec:
+  ports:
+    - port: 3001
+  selector:
+    app: order-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order-service
+  template:
+    metadata:
+      labels:
+        app: order-service
+    spec:
+      containers:
+        - name: order-service
+          image: <YOUR_REGISTRY>/order-service:latest
+          ports:
+            - containerPort: 3001
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
+          resources:
+            requests: { memory: "64Mi", cpu: "50m" }
+            limits: { memory: "128Mi", cpu: "200m" }
+
+# ============================================================
+# inventory-service (Node.js - port 3002)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory-service
+spec:
+  ports:
+    - port: 3002
+  selector:
+    app: inventory-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inventory-service
+  template:
+    metadata:
+      labels:
+        app: inventory-service
+    spec:
+      containers:
+        - name: inventory-service
+          image: <YOUR_REGISTRY>/inventory-service:latest
+          ports:
+            - containerPort: 3002
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
+          resources:
+            requests: { memory: "64Mi", cpu: "50m" }
+            limits: { memory: "128Mi", cpu: "200m" }
+
+# ============================================================
+# pos-telemetry-service (.NET 6 - port 5001)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pos-telemetry-service
+spec:
+  ports:
+    - port: 5001
+  selector:
+    app: pos-telemetry-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pos-telemetry-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pos-telemetry-service
+  template:
+    metadata:
+      labels:
+        app: pos-telemetry-service
+    spec:
+      containers:
+        - name: pos-telemetry-service
+          image: <YOUR_REGISTRY>/pos-telemetry-service:latest
+          ports:
+            - containerPort: 5001
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
+          resources:
+            requests: { memory: "128Mi", cpu: "100m" }
+            limits: { memory: "256Mi", cpu: "300m" }
+
+# ============================================================
+# catalog-service (Java 17 - port 8081)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: catalog-service
+spec:
+  ports:
+    - port: 8081
+  selector:
+    app: catalog-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: catalog-service
+  template:
+    metadata:
+      labels:
+        app: catalog-service
+    spec:
+      containers:
+        - name: catalog-service
+          image: <YOUR_REGISTRY>/catalog-service:latest
+          ports:
+            - containerPort: 8081
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
+          resources:
+            requests: { memory: "256Mi", cpu: "200m" }
+            limits: { memory: "512Mi", cpu: "500m" }
+
+# ============================================================
+# store-layout-service (Python 3.11 - port 5002)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: store-layout-service
+spec:
+  ports:
+    - port: 5002
+  selector:
+    app: store-layout-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: store-layout-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: store-layout-service
+  template:
+    metadata:
+      labels:
+        app: store-layout-service
+    spec:
+      containers:
+        - name: store-layout-service
+          image: <YOUR_REGISTRY>/store-layout-service:latest
+          ports:
+            - containerPort: 5002
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
+          resources:
+            requests: { memory: "64Mi", cpu: "50m" }
+            limits: { memory: "128Mi", cpu: "200m" }
+
+# ============================================================
+# sales-analytics-service (Go 1.22 - port 8082)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sales-analytics-service
+spec:
+  ports:
+    - port: 8082
+  selector:
+    app: sales-analytics-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sales-analytics-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sales-analytics-service
+  template:
+    metadata:
+      labels:
+        app: sales-analytics-service
+    spec:
+      containers:
+        - name: sales-analytics-service
+          image: <YOUR_REGISTRY>/sales-analytics-service:latest
+          ports:
+            - containerPort: 8082
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
+          resources:
+            requests: { memory: "32Mi", cpu: "50m" }
+            limits: { memory: "64Mi", cpu: "200m" }
+
+# ============================================================
+# demand-forecast-service (Ruby 3.2 - port 4567)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demand-forecast-service
+spec:
+  ports:
+    - port: 4567
+  selector:
+    app: demand-forecast-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demand-forecast-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demand-forecast-service
+  template:
+    metadata:
+      labels:
+        app: demand-forecast-service
+    spec:
+      containers:
+        - name: demand-forecast-service
+          image: <YOUR_REGISTRY>/demand-forecast-service:latest
+          ports:
+            - containerPort: 4567
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
+          resources:
+            requests: { memory: "64Mi", cpu: "50m" }
+            limits: { memory: "128Mi", cpu: "200m" }
+
+# ============================================================
+# fulfillment-dispatch-service (Kotlin - port 8083)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fulfillment-dispatch-service
+spec:
+  ports:
+    - port: 8083
+  selector:
+    app: fulfillment-dispatch-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fulfillment-dispatch-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fulfillment-dispatch-service
+  template:
+    metadata:
+      labels:
+        app: fulfillment-dispatch-service
+    spec:
+      containers:
+        - name: fulfillment-dispatch-service
+          image: <YOUR_REGISTRY>/fulfillment-dispatch-service:latest
+          ports:
+            - containerPort: 8083
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: RABBITMQ_PASSWORD
+          resources:
+            requests: { memory: "256Mi", cpu: "200m" }
+            limits: { memory: "512Mi", cpu: "500m" }
+
+# ============================================================
+# customer-notification-service (PHP 8.2 - port 8080)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: customer-notification-service
+spec:
+  ports:
+    - port: 8080
+  selector:
+    app: customer-notification-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: customer-notification-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: customer-notification-service
+  template:
+    metadata:
+      labels:
+        app: customer-notification-service
+    spec:
+      containers:
+        - name: customer-notification-service
+          image: <YOUR_REGISTRY>/customer-notification-service:latest
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
+          resources:
+            requests: { memory: "64Mi", cpu: "50m" }
+            limits: { memory: "128Mi", cpu: "200m" }
+
+# ============================================================
+# supplier-feed-service (Elixir 1.16 - port 4000)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: supplier-feed-service
+spec:
+  ports:
+    - port: 4000
+  selector:
+    app: supplier-feed-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supplier-feed-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: supplier-feed-service
+  template:
+    metadata:
+      labels:
+        app: supplier-feed-service
+    spec:
+      containers:
+        - name: supplier-feed-service
+          image: <YOUR_REGISTRY>/supplier-feed-service:latest
+          ports:
+            - containerPort: 4000
+          resources:
+            requests: { memory: "64Mi", cpu: "50m" }
+            limits: { memory: "128Mi", cpu: "200m" }
+
+# ============================================================
+# aggregator-service (Rust 1.75 - port 8084)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aggregator-service
+spec:
+  ports:
+    - port: 8084
+  selector:
+    app: aggregator-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aggregator-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aggregator-service
+  template:
+    metadata:
+      labels:
+        app: aggregator-service
+    spec:
+      containers:
+        - name: aggregator-service
+          image: <YOUR_REGISTRY>/aggregator-service:latest
+          ports:
+            - containerPort: 8084
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
+          resources:
+            requests: { memory: "32Mi", cpu: "50m" }
+            limits: { memory: "64Mi", cpu: "200m" }
+
+# ============================================================
+# auth-service (Ruby 3.2 - port 4568)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+spec:
+  ports:
+    - port: 4568
+  selector:
+    app: auth-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+        - name: auth-service
+          image: <YOUR_REGISTRY>/auth-service:latest
+          ports:
+            - containerPort: 4568
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
+            - name: DEMO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DEMO_PASSWORD
+          resources:
+            requests: { memory: "64Mi", cpu: "50m" }
+            limits: { memory: "128Mi", cpu: "200m" }
+
+# ============================================================
+# audit-service (Go 1.22 - port 8085)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: audit-service
+spec:
+  ports:
+    - port: 8085
+  selector:
+    app: audit-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: audit-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: audit-service
+  template:
+    metadata:
+      labels:
+        app: audit-service
+    spec:
+      containers:
+        - name: audit-service
+          image: <YOUR_REGISTRY>/audit-service:latest
+          ports:
+            - containerPort: 8085
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
+          resources:
+            requests: { memory: "32Mi", cpu: "50m" }
+            limits: { memory: "64Mi", cpu: "200m" }
+
+# ============================================================
+# dynamic-pricing-service (Python 3.11 - port 5003)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dynamic-pricing-service
+spec:
+  ports:
+    - port: 5003
+  selector:
+    app: dynamic-pricing-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dynamic-pricing-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dynamic-pricing-service
+  template:
+    metadata:
+      labels:
+        app: dynamic-pricing-service
+    spec:
+      containers:
+        - name: dynamic-pricing-service
+          image: <YOUR_REGISTRY>/dynamic-pricing-service:latest
+          ports:
+            - containerPort: 5003
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
+          resources:
+            requests: { memory: "64Mi", cpu: "50m" }
+            limits: { memory: "128Mi", cpu: "200m" }
+
+# ============================================================
+# fulfillment-service (Java 17 - port 8086)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fulfillment-service
+spec:
+  ports:
+    - port: 8086
+  selector:
+    app: fulfillment-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fulfillment-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fulfillment-service
+  template:
+    metadata:
+      labels:
+        app: fulfillment-service
+    spec:
+      containers:
+        - name: fulfillment-service
+          image: <YOUR_REGISTRY>/fulfillment-service:latest
+          ports:
+            - containerPort: 8086
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: RABBITMQ_PASSWORD
+          resources:
+            requests: { memory: "256Mi", cpu: "200m" }
+            limits: { memory: "512Mi", cpu: "500m" }
+
+# ============================================================
+# fraud-detection-service (.NET 6 - port 5004)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fraud-detection-service
+spec:
+  ports:
+    - port: 5004
+  selector:
+    app: fraud-detection-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fraud-detection-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fraud-detection-service
+  template:
+    metadata:
+      labels:
+        app: fraud-detection-service
+    spec:
+      containers:
+        - name: fraud-detection-service
+          image: <YOUR_REGISTRY>/fraud-detection-service:latest
+          ports:
+            - containerPort: 5004
+          envFrom:
+            - configMapRef:
+                name: app-config
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DB_PASSWORD
+          resources:
+            requests: { memory: "128Mi", cpu: "100m" }
+            limits: { memory: "256Mi", cpu: "300m" }
+
+# ============================================================
+# api-gateway (Node.js - port 3000)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+spec:
+  ports:
+    - port: 3000
+  selector:
+    app: api-gateway
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: <YOUR_REGISTRY>/api-gateway:latest
+          ports:
+            - containerPort: 3000
+          resources:
+            requests: { memory: "64Mi", cpu: "50m" }
+            limits: { memory: "128Mi", cpu: "200m" }
+
+# ============================================================
+# web-ui (Nginx - port 80)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-ui
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+  selector:
+    app: web-ui
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web-ui
+  template:
+    metadata:
+      labels:
+        app: web-ui
+    spec:
+      containers:
+        - name: web-ui
+          image: <YOUR_REGISTRY>/web-ui:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests: { memory: "32Mi", cpu: "25m" }
+            limits: { memory: "64Mi", cpu: "100m" }
+
+# ============================================================
+# load-generator (Locust - port 8089)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: load-generator
+spec:
+  ports:
+    - port: 8089
+  selector:
+    app: load-generator
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: load-generator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: load-generator
+  template:
+    metadata:
+      labels:
+        app: load-generator
+    spec:
+      containers:
+        - name: load-generator
+          image: <YOUR_REGISTRY>/load-generator:latest
+          ports:
+            - containerPort: 8089
+          env:
+            - name: LOCUST_HOST
+              value: "http://api-gateway:3000"
+            - name: DEMO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DEMO_PASSWORD
+          command: ["locust", "-f", "locustfile.py", "--host", "http://api-gateway:3000", "--web-host", "0.0.0.0"]
+          resources:
+            requests: { memory: "64Mi", cpu: "50m" }
+            limits: { memory: "128Mi", cpu: "200m" }
