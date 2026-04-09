@@ -2,7 +2,6 @@ FROM rust:latest AS build
 WORKDIR /app
 RUN apt-get update && apt-get install -y pkg-config libssl-dev && rm -rf /var/lib/apt/lists/*
 COPY Cargo.toml ./
-RUN mkdir src && echo "fn main() {}" > src/main.rs && cargo build --release && rm -rf src
 COPY src ./src
 RUN cargo build --release
 

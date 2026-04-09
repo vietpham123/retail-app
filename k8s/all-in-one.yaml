@@ -172,8 +172,8 @@ spec:
                   name: app-secrets
                   key: DB_PASSWORD
           resources:
-            requests: { memory: "128Mi", cpu: "100m" }
-            limits: { memory: "256Mi", cpu: "300m" }
+            requests: { memory: "256Mi", cpu: "100m" }
+            limits: { memory: "512Mi", cpu: "300m" }
 
 # ============================================================
 # catalog-service (Java 17 - port 8081)
