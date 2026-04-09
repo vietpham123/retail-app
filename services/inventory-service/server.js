@@ -21,11 +21,12 @@ const redis = new Redis({
 
 const INIT_SQL = `
 CREATE TABLE IF NOT EXISTS inventory_readings (
-  id UUID PRIMARY KEY,
+  id UUID NOT NULL,
   sku TEXT NOT NULL,
   quantity INTEGER NOT NULL,
   warehouse TEXT NOT NULL,
-  recorded_at TIMESTAMPTZ DEFAULT NOW()
+  recorded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (id, recorded_at)
 );
 SELECT create_hypertable('inventory_readings', 'recorded_at', if_not_exists => TRUE);
 `;

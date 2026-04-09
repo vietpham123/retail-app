@@ -36,14 +36,15 @@ let producerReady = false;
 // --- Init DB Table ---
 const INIT_SQL = `
 CREATE TABLE IF NOT EXISTS orders (
-  id UUID PRIMARY KEY,
+  id UUID NOT NULL,
   customer_id TEXT NOT NULL,
   store TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'placed',
   total_amount DOUBLE PRECISION NOT NULL,
   items_count INTEGER DEFAULT 0,
-  placed_at TIMESTAMPTZ DEFAULT NOW(),
-  delivered_at TIMESTAMPTZ
+  placed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  delivered_at TIMESTAMPTZ,
+  PRIMARY KEY (id, placed_at)
 );
 SELECT create_hypertable('orders', 'placed_at', if_not_exists => TRUE);
 `;
