@@ -4,7 +4,10 @@ const cors = require('cors');
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+
+// NOTE: express.json() must NOT be applied before proxy routes,
+// as it consumes the request body stream. Only use it for
+// gateway-handled endpoints (simulate, etc.) below the proxies.
 
 // =========================================================
 // AGENT: Update service names and ports after industry rename
@@ -71,7 +74,7 @@ app.get('/api/services', (req, res) => {
 });
 
 // Simulation: trigger data generation across all services
-app.post('/api/simulate/cycle', async (req, res) => {
+app.post('/api/simulate/cycle', express.json(), async (req, res) => {
   const http = require('http');
   const results = {};
 
