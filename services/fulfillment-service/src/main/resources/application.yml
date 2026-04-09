@@ -2,6 +2,8 @@ server:
   port: 8086
 
 spring:
+  main:
+    allow-circular-references: true
   datasource:
     url: jdbc:postgresql://${DB_HOST:timescaledb}:${DB_PORT:5432}/${DB_NAME:appdb}
     username: ${DB_USER:appuser}

@@ -1,9 +1,11 @@
 package com.genericapp.dispatch
 
+import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
+import org.springframework.context.annotation.Bean
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.web.bind.annotation.*
 import java.util.UUID
@@ -90,6 +92,9 @@ class Application(
             Long::class.java
         ) ?: 0L)
     )
+
+    @Bean
+    fun fulfillmentDispatchQueue() = Queue("fulfillment-dispatch-service.tasks", true)
 
     // Listen for new fulfillment tasks from RabbitMQ
     @RabbitListener(queues = ["fulfillment-dispatch-service.tasks"])
