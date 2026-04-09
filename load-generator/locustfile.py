@@ -97,13 +97,10 @@ class UISession(SequentialTaskSet):
         self.session_id = str(uuid.uuid4())
         self.current_page = "/"
 
-        # Load HTML page — triggers Dynatrace JS agent injection + dtCookie
-        self.client.get("/", headers=self._browser_headers("/"),
-                        name="GET / (main page)")
-        think(0.3, 0.8)
-        self.client.get("/static/js/main.js",
-                        headers=self._browser_headers("/", accept="application/javascript"),
-                        name="GET /static/js/main.js")
+        # Initial page load — hit the dashboard endpoint as the landing page
+        self.client.get("/api/analytics/dashboard",
+                        headers=self._browser_headers("/", accept="text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"),
+                        name="GET /api/analytics/dashboard (page load)")
         think(0.5, 1)
 
         # Login
@@ -203,12 +200,10 @@ class UISession(SequentialTaskSet):
                         name="GET /api/analytics/dashboard")
         think(2, 4)
 
-    # Logout
+    # End session
     @task
-    def logout(self):
-        self.client.post("/api/auth/logout", json={},
-                         headers=self._browser_headers("/logout"),
-                         name="POST /api/auth/logout")
+    def end_session(self):
+        # No explicit logout endpoint — just end the sequential task set
         think(0.5, 1)
         self.interrupt()
 
