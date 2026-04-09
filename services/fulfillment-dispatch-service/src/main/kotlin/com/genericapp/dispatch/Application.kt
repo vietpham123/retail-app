@@ -7,7 +7,7 @@ import org.springframework.boot.runApplication
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.web.bind.annotation.*
 import java.util.UUID
-import javax.annotation.PostConstruct
+import jakarta.annotation.PostConstruct
 
 @SpringBootApplication
 @RestController
