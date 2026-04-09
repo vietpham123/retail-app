@@ -1,4 +1,4 @@
-FROM rust:1.75-slim AS build
+FROM rust:1.85-slim AS build
 WORKDIR /app
 RUN apt-get update && apt-get install -y pkg-config libssl-dev && rm -rf /var/lib/apt/lists/*
 COPY Cargo.toml ./
