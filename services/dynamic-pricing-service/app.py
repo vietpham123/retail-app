@@ -101,7 +101,7 @@ def get_pricing():
 def calculate():
     """Apply promo discount to a purchase total for a store."""
     data = request.get_json() or {}
-    store = data.get('store', 'Gap')
+    store = data.get('store', 'Alpha')
     total = float(data.get('total', 100.0))
     try:
         conn = get_conn()
@@ -145,7 +145,7 @@ def create_tier():
         """, (
             promo_id,
             data.get('name', 'New Promotion'),
-            data.get('store', 'Gap'),
+            data.get('store', 'Alpha'),
             data.get('category', 'general'),
             float(data.get('discount_pct', 10.0)),
             float(data.get('min_purchase', 0)),
@@ -164,7 +164,7 @@ def create_tier():
 def simulate():
     """Seed promotional pricing for all stores."""
     import random
-    stores = ["Gap", "Old Navy", "Macy's"]
+    stores = ["Alpha", "Beta", "Gamma"]
     promos = ["Summer Sale", "Clearance", "Holiday Doorbuster"]
     categories = ['tops', 'bottoms', 'shoes', 'accessories']
     try:

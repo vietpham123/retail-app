@@ -101,9 +101,9 @@ app.post('/api/simulate/cycle', express.json(), async (req, res) => {
   }
 
   // --- Generate fulfillment dispatch, work-orders, and audit data ---
-  const stores = ['Gap Flagship', 'Old Navy Mall', "Macy's Downtown"];
+  const stores = ['Store Alpha', 'Store Beta', 'Store Gamma'];
   const teams = ['East Warehouse', 'West Warehouse', 'Store Fulfillment'];
-  const users = ['mgr_gap', 'mgr_oldnavy', 'mgr_macys', 'wh_east_1', 'wh_west_1'];
+  const users = ['mgr_alpha', 'mgr_beta', 'mgr_gamma', 'wh_east_1', 'wh_west_1'];
   const priorities = ['standard', 'express', 'same_day'];
   const actions = ['login', 'create_order', 'update_inventory', 'approve_dispatch', 'generate_report', 'modify_pricing'];
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];

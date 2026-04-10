@@ -85,7 +85,7 @@ app.post('/api/inventory', async (req, res) => {
     const { rows } = await pool.query(
       `INSERT INTO inventory_readings (id, sku, quantity, warehouse, recorded_at)
        VALUES ($1, $2, $3, $4, NOW()) RETURNING *`,
-      [id, sku || 'SKU-GAP-001', quantity || 0, warehouse || 'Gap Flagship']
+      [id, sku || 'SKU-SA-001', quantity || 0, warehouse || 'Store Alpha']
     );
     await redis.del('inventory:latest');
     res.status(201).json(rows[0]);
@@ -96,8 +96,8 @@ app.post('/api/inventory', async (req, res) => {
 
 app.post('/api/inventory/simulate', async (req, res) => {
   try {
-    const warehouses = ["Gap Flagship", "Old Navy Mall", "Macy's Downtown", "East Distribution Center", "West Distribution Center"];
-    const skuPrefixes = ['SKU-GAP', 'SKU-ON', 'SKU-MAC'];
+    const warehouses = ["Store Alpha", "Store Beta", "Store Gamma", "East Distribution Center", "West Distribution Center"];
+    const skuPrefixes = ['SKU-SA', 'SKU-SB', 'SKU-SC'];
     const count = parseInt(req.body.count) || 10;
     const records = [];
     for (let i = 0; i < count; i++) {

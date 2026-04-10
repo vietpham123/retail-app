@@ -22,8 +22,8 @@ end
 # --- Seed demo users from industry.yaml demo_users ---
 # Retail demo users
 DEMO_USERS = %w[
-  admin_retail mgr_gap mgr_oldnavy mgr_macys
-  assoc_gap_1 assoc_gap_2 assoc_oldnavy_1 assoc_macys_1
+  admin_retail mgr_alpha mgr_beta mgr_gamma
+  assoc_alpha_1 assoc_alpha_2 assoc_beta_1 assoc_gamma_1
   wh_east_1 wh_east_2 wh_west_1
   viewer_corp_1 viewer_corp_2 viewer_corp_3 viewer_corp_4
 ]

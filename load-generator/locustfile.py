@@ -21,8 +21,8 @@ from locust import HttpUser, TaskSet, task, between
 
 # --- Demo Users (retail store staff + corporate viewers) ---
 DEMO_USERNAMES = [
-    "admin_retail", "mgr_gap", "mgr_oldnavy", "mgr_macys",
-    "assoc_gap_1", "assoc_gap_2", "assoc_oldnavy_1", "assoc_macys_1",
+    "admin_retail", "mgr_alpha", "mgr_beta", "mgr_gamma",
+    "assoc_alpha_1", "assoc_alpha_2", "assoc_beta_1", "assoc_gamma_1",
     "wh_east_1", "wh_east_2", "wh_west_1",
     "viewer_corp_1", "viewer_corp_2", "viewer_corp_3", "viewer_corp_4",
 ]
@@ -48,10 +48,10 @@ TAB_ENDPOINTS = [
     {"name": "Users", "page": "/users", "endpoint": "/api/auth/users"},
 ]
 
-STORES = ["Gap Flagship", "Old Navy Mall", "Macy's Downtown", "East Distribution Center", "West Distribution Center"]
-SKUS = [f"SKU-GAP-{i:03d}" for i in range(1, 20)] + \
-       [f"SKU-ON-{i:03d}" for i in range(1, 20)] + \
-       [f"SKU-MAC-{i:03d}" for i in range(1, 20)]
+STORES = ["Store Alpha", "Store Beta", "Store Gamma", "East Distribution Center", "West Distribution Center"]
+SKUS = [f"SKU-SA-{i:03d}" for i in range(1, 20)] + \
+       [f"SKU-SB-{i:03d}" for i in range(1, 20)] + \
+       [f"SKU-SC-{i:03d}" for i in range(1, 20)]
 
 # --- Real browser User-Agent strings for Dynatrace RUM detection ---
 BROWSER_USER_AGENTS = [

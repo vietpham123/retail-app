@@ -2,7 +2,7 @@
 # INDUSTRY CONFIGURATION — RETAIL
 # ============================================================
 # Retail Operations Platform
-# Example stores: Gap, Old Navy, Macy's
+# Example stores: Store Alpha, Store Beta, Store Gamma
 # ============================================================
 
 industry: retail
@@ -308,22 +308,22 @@ roles:
 
 # --- Regions / Stores ----------------------------------------
 regions:
-  - { id: "gap-flagship", name: "Gap Flagship" }
-  - { id: "old-navy-mall", name: "Old Navy Mall" }
-  - { id: "macys-downtown", name: "Macy's Downtown" }
+  - { id: "store-alpha", name: "Store Alpha" }
+  - { id: "store-beta", name: "Store Beta" }
+  - { id: "store-gamma", name: "Store Gamma" }
   - { id: "warehouse-east", name: "East Distribution Center" }
   - { id: "warehouse-west", name: "West Distribution Center" }
 
 # --- Demo Users ---------------------------------------------
 demo_users:
   - { username: "admin_retail", role: "admin" }
-  - { username: "mgr_gap", role: "store_manager" }
-  - { username: "mgr_oldnavy", role: "store_manager" }
-  - { username: "mgr_macys", role: "store_manager" }
-  - { username: "assoc_gap_1", role: "store_associate" }
-  - { username: "assoc_gap_2", role: "store_associate" }
-  - { username: "assoc_oldnavy_1", role: "store_associate" }
-  - { username: "assoc_macys_1", role: "store_associate" }
+  - { username: "mgr_alpha", role: "store_manager" }
+  - { username: "mgr_beta", role: "store_manager" }
+  - { username: "mgr_gamma", role: "store_manager" }
+  - { username: "assoc_alpha_1", role: "store_associate" }
+  - { username: "assoc_alpha_2", role: "store_associate" }
+  - { username: "assoc_beta_1", role: "store_associate" }
+  - { username: "assoc_gamma_1", role: "store_associate" }
   - { username: "wh_east_1", role: "warehouse_worker" }
   - { username: "wh_east_2", role: "warehouse_worker" }
   - { username: "wh_west_1", role: "warehouse_worker" }

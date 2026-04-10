@@ -1,6 +1,6 @@
 # Retail Operations Platform
 
-A polyglot microservices platform for **retail operations management** across Gap, Old Navy, and Macy's stores. Features 19 services across 10 programming languages, backed by production-grade infrastructure.
+A polyglot microservices platform for **retail operations management** across multiple stores. Features 19 services across 10 programming languages, backed by production-grade infrastructure.
 
 ## Quick Start
 
@@ -102,9 +102,9 @@ A polyglot microservices platform for **retail operations management** across Ga
 
 | Store                      | Type            |
 |----------------------------|-----------------|
-| Gap Flagship               | Retail Store    |
-| Old Navy Mall              | Retail Store    |
-| Macy's Downtown            | Retail Store    |
+| Store Alpha                | Retail Store    |
+| Store Beta                 | Retail Store    |
+| Store Gamma                | Retail Store    |
 | East Distribution Center   | Warehouse       |
 | West Distribution Center   | Warehouse       |
 
@@ -124,12 +124,12 @@ A polyglot microservices platform for **retail operations management** across Ga
 | Username        | Role              |
 |-----------------|-------------------|
 | admin_retail    | admin             |
-| mgr_gap         | store_manager     |
-| mgr_oldnavy     | store_manager     |
-| mgr_macys       | store_manager     |
-| assoc_gap_1/2   | store_associate   |
-| assoc_oldnavy_1 | store_associate   |
-| assoc_macys_1   | store_associate   |
+| mgr_alpha       | store_manager     |
+| mgr_beta        | store_manager     |
+| mgr_gamma       | store_manager     |
+| assoc_alpha_1/2 | store_associate   |
+| assoc_beta_1    | store_associate   |
+| assoc_gamma_1   | store_associate   |
 | wh_east_1/2     | warehouse_worker  |
 | wh_west_1       | warehouse_worker  |
 | viewer_corp_1-4 | viewer            |

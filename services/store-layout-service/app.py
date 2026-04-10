@@ -117,7 +117,7 @@ def create_asset():
             asset_id,
             data.get('name', 'Asset'),
             data.get('type', 'pos'),
-            data.get('store', 'Gap Flagship'),
+            data.get('store', 'Store Alpha'),
             data.get('status', 'active'),
             data.get('parent_id'),
             json.dumps(data.get('metadata', {})),
@@ -137,7 +137,7 @@ def create_asset():
 def simulate():
     """Generate sample store asset hierarchy."""
     asset_types = ['pos', 'display', 'shelf', 'kiosk', 'refrigerator']
-    stores = ["Gap Flagship", "Old Navy Mall", "Macy's Downtown"]
+    stores = ["Store Alpha", "Store Beta", "Store Gamma"]
     asset_names = ['POS Terminal', 'Display Rack', 'Shelf Unit', 'Self-Checkout Kiosk', 'Cooler']
     count = int((request.get_json() or {}).get('count', 10))
     try:

@@ -93,7 +93,7 @@ app.post('/api/orders', async (req, res) => {
     const { rows } = await pool.query(
       `INSERT INTO orders (id, customer_id, store, total_amount, items_count, placed_at)
        VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *`,
-      [id, customer_id || 'CUST-001', store || 'Gap Flagship', total_amount || 0, items_count || 0]
+      [id, customer_id || 'CUST-001', store || 'Store Alpha', total_amount || 0, items_count || 0]
     );
 
     // Publish event to Kafka
@@ -136,7 +136,7 @@ app.put('/api/orders/:id', async (req, res) => {
 // --- Simulate: generate random orders ---
 app.post('/api/orders/simulate', async (req, res) => {
   try {
-    const stores = ["Gap Flagship", "Old Navy Mall", "Macy's Downtown", "East Distribution Center", "West Distribution Center"];
+    const stores = ["Store Alpha", "Store Beta", "Store Gamma", "East Distribution Center", "West Distribution Center"];
     const statuses = ['placed', 'processing', 'shipped'];
     const count = parseInt(req.body.count) || 5;
 
