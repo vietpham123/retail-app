@@ -76,7 +76,7 @@ public class Application {
         String sku = (String) body.getOrDefault("sku", "SKU-000");
         String name = (String) body.getOrDefault("name", "Unknown Product");
         String category = (String) body.getOrDefault("category", "general");
-        String brand = (String) body.getOrDefault("brand", "Gap");
+        String brand = (String) body.getOrDefault("brand", "Alpha");
         double price = Double.parseDouble(body.getOrDefault("price", 0.0).toString());
         jdbc.update(
             "INSERT INTO catalog_products (id, sku, name, category, brand, price, updated_at) VALUES (?::uuid, ?, ?, ?, ?, ?, NOW())",
@@ -89,7 +89,7 @@ public class Application {
     public void onMessage(String message) {
         try {
             jdbc.update(
-                "INSERT INTO catalog_products (sku, name, category, brand, price, updated_at) VALUES ('kafka-sku', 'Kafka Product', 'general', 'Gap', 0.0, NOW())"
+                "INSERT INTO catalog_products (sku, name, category, brand, price, updated_at) VALUES ('kafka-sku', 'Kafka Product', 'general', 'Alpha', 0.0, NOW())"
             );
         } catch (Exception e) {
             System.err.println("Kafka catalog error: " + e.getMessage());
@@ -101,7 +101,7 @@ public class Application {
     public void generateProducts() {
         try {
             String[] categories = {"tops", "bottoms", "shoes", "accessories", "outerwear"};
-            String[] brands = {"Gap", "Old Navy", "Macy's Private Label"};
+            String[] brands = {"Alpha", "Beta", "Gamma"};
             var rng = new java.util.Random();
             String sku = "SKU-" + String.format("%04d", rng.nextInt(9999));
             String category = categories[rng.nextInt(categories.length)];

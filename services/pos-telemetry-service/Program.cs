@@ -27,7 +27,7 @@ try
             terminal_id TEXT NOT NULL,
             metric TEXT NOT NULL,
             value DOUBLE PRECISION NOT NULL,
-            store TEXT NOT NULL DEFAULT 'Gap Flagship',
+            store TEXT NOT NULL DEFAULT 'Store Alpha',
             recorded_at TIMESTAMPTZ DEFAULT NOW()
         );";
     await cmd.ExecuteNonQueryAsync();
@@ -50,8 +50,8 @@ _ = Task.Run(async () =>
             await conn.OpenAsync();
             var rng = new Random();
             string[] metrics = { "transaction_count", "avg_basket_size", "scan_rate", "error_rate", "uptime_pct" };
-            string[] stores = { "Gap Flagship", "Old Navy Mall", "Macy's Downtown" };
-            string[] prefixes = { "POS-GAP", "POS-ON", "POS-MAC" };
+            string[] stores = { "Store Alpha", "Store Beta", "Store Gamma" };
+            string[] prefixes = { "POS-SA", "POS-SB", "POS-SC" };
             for (int i = 0; i < 3; i++)
             {
                 using var cmd = conn.CreateCommand();

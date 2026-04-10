@@ -21,7 +21,7 @@ begin
     CREATE TABLE IF NOT EXISTS demand_forecasts (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       sku TEXT NOT NULL,
-      store TEXT NOT NULL DEFAULT 'Gap Flagship',
+      store TEXT NOT NULL DEFAULT 'Store Alpha',
       predicted_units DOUBLE PRECISION NOT NULL,
       confidence DOUBLE PRECISION NOT NULL DEFAULT 0.8,
       period_start TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -75,8 +75,8 @@ post '/api/forecasts' do
       "VALUES ($1, $2, $3, $4, $5, $6, $7)",
       [
         id,
-        data.fetch('sku', 'SKU-GAP-001'),
-        data.fetch('store', 'Gap Flagship'),
+        data.fetch('sku', 'SKU-SA-001'),
+        data.fetch('store', 'Store Alpha'),
         data.fetch('predicted_units', rand * 500 + 10).to_f,
         data.fetch('confidence', 0.8).to_f,
         data.fetch('period_start', Time.now.utc.iso8601),
@@ -93,8 +93,8 @@ end
 
 post '/api/forecasts/generate' do
   content_type :json
-  stores = ["Gap Flagship", "Old Navy Mall", "Macy's Downtown", "East Distribution Center", "West Distribution Center"]
-  sku_prefixes = %w[SKU-GAP SKU-ON SKU-MAC]
+  stores = ["Store Alpha", "Store Beta", "Store Gamma", "East Distribution Center", "West Distribution Center"]
+  sku_prefixes = %w[SKU-SA SKU-SB SKU-SC]
   count = 0
   begin
     stores.each do |store|

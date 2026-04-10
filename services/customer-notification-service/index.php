@@ -99,7 +99,7 @@ if ($uri === '/api/notifications/stats' && $method === 'GET') {
 if ($uri === '/api/notifications/simulate' && $method === 'POST') {
     $channels = ['email', 'sms', 'push', 'webhook'];
     $subjects = ['Order Shipped', 'Delivery Update', 'Return Approved', 'Price Drop Alert', 'Back In Stock'];
-    $recipients = ['shopper_1@gap.com', 'customer_2@oldnavy.com', 'buyer_3@macys.com'];
+    $recipients = ['shopper_1@storealpha.example.com', 'customer_2@storebeta.example.com', 'buyer_3@storegamma.example.com'];
     $count = 10;
     for ($i = 0; $i < $count; $i++) {
         $id = sprintf('%s-%s-%s-%s-%s',
